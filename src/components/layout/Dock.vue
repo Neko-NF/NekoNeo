@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
+import NIcon from '@/components/base/NIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
 
 const navItems = [
-  { name: 'dashboard', label: '仪表盘', icon: '⌂' },
-  { name: 'settings', label: '设置', icon: '⚙' },
-  { name: 'privacy', label: '隐私', icon: '◫' },
-  { name: 'console', label: '日志', icon: '▤' },
-  { name: 'about', label: '关于', icon: '◎' },
+  { name: 'dashboard', label: '仪表盘', icon: 'house' as const },
+  { name: 'settings', label: '设置', icon: 'gear' as const },
+  { name: 'privacy', label: '隐私', icon: 'shield' as const },
+  { name: 'console', label: '日志', icon: 'terminal' as const },
+  { name: 'about', label: '关于', icon: 'info' as const },
 ];
 </script>
 
@@ -24,7 +25,7 @@ const navItems = [
       :aria-label="item.label"
       @click="router.push({ name: item.name })"
     >
-      <span class="dock-item__icon">{{ item.icon }}</span>
+      <NIcon :name="item.icon" :size="20" />
       <span class="dock-item__label">{{ item.label }}</span>
     </button>
   </nav>
@@ -45,6 +46,7 @@ const navItems = [
   border: 1px solid var(--dock-border);
   border-radius: var(--radius-full);
   box-shadow: var(--dock-shadow);
+  user-select: none;
 }
 
 .dock-item {
@@ -55,12 +57,13 @@ const navItems = [
   gap: 3px;
   width: var(--dock-item-size);
   height: var(--dock-item-size);
-  border: 0;
+  border: none;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
 }
 
 .dock-item:hover {
@@ -73,14 +76,10 @@ const navItems = [
   color: var(--color-primary);
 }
 
-.dock-item__icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
 .dock-item__label {
   font-size: var(--text-xs);
   font-weight: var(--fw-medium);
   line-height: 1;
+  white-space: nowrap;
 }
 </style>

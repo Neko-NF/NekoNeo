@@ -9,20 +9,30 @@ defineProps<{
 <template>
   <div class="log-entry" :class="`log-entry--${entry.level}`">
     <span class="log-entry__time">{{ entry.time }}</span>
-    <span>{{ entry.message }}</span>
+    <span class="log-entry__msg">{{ entry.message }}</span>
   </div>
 </template>
 
 <style scoped>
 .log-entry {
+  display: flex;
+  align-items: baseline;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   line-height: 1.6;
+  padding: 2px 0;
 }
 
 .log-entry__time {
-  margin-right: var(--space-2);
+  flex-shrink: 0;
+  margin-right: var(--space-3);
   color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  user-select: none;
+}
+
+.log-entry__msg {
+  word-break: break-all;
 }
 
 .log-entry--info {

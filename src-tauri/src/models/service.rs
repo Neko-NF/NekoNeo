@@ -10,8 +10,10 @@ pub struct TickResult {
     pub is_charging: bool,
     pub has_battery: bool,
     pub user_status: String,
+    pub idle_ms: u64,
     pub has_screenshot: bool,
     pub screenshot_blurred: bool,
+    pub screenshot_path: Option<String>,
     pub error: Option<String>,
 }
 

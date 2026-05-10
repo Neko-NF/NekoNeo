@@ -55,7 +55,7 @@ defineProps<Props>();
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
 }
 
 .status-card__eyebrow {
@@ -66,19 +66,20 @@ defineProps<Props>();
 
 .status-card__title {
   margin: 0;
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-semibold);
 }
 
 .status-card__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .status-card__item {
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-4);
+  padding: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--bg-elevated);
 }

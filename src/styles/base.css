@@ -7,16 +7,20 @@ body,
 
 html {
   background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  min-width: 900px;
   color: var(--text-primary);
   font-family: var(--font-ui);
+  font-size: var(--text-body);
   background: var(--bg-app);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -25,15 +29,40 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
 }
 
+::selection {
+  background: var(--color-primary-muted);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar (Win11 style: thin, overlay, rounded) ───────────────── */
+
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
   border-radius: var(--radius-full);
-  background: var(--border-strong);
-  background-clip: content-box;
+  background: rgba(128, 128, 128, 0.35);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.55);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

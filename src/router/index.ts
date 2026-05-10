@@ -8,6 +8,7 @@ const router = createRouter({
     { path: '/privacy', name: 'privacy', component: () => import('@/views/Privacy.vue') },
     { path: '/console', name: 'console', component: () => import('@/views/Console.vue') },
     { path: '/about', name: 'about', component: () => import('@/views/About.vue') },
+    { path: '/picker', name: 'picker', component: () => import('@/views/PrivacyPicker.vue') },
   ],
 });
 

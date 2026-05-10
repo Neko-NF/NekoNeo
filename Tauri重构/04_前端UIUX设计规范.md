@@ -1,7 +1,7 @@
 # NekoNeo — 前端 UI/UX 设计规范
 
-> 版本：v1.0 | 日期：2026-05-10
-> 设计方向：**简洁 · 现代 · 克制 · 高密度信息展示**
+> 版本：v1.1 | 日期：2026-05-10
+> 设计方向：**Win10/11 Fluent 风格 · 简洁 · 现代 · 中性色调**
 
 ---
 
@@ -13,9 +13,11 @@
 |------|------|
 | **内容优先** | 数据和状态是主角，装饰元素服务于内容，不喧宾夺主 |
 | **克制** | 不堆叠视觉效果；每个元素存在均有目的 |
+| **中性色调** | 深色/浅色均使用中性灰色系（Win11 Mica 风格），避免大面积蓝色调 |
 | **密度适中** | 工具型软件需要在有限空间展示足够信息，但避免拥挤 |
 | **状态清晰** | 运行中/停止/错误/警告 必须有视觉区分，颜色语义严格 |
 | **一致性** | 同类操作的视觉呈现统一，减少用户认知负担 |
+| **Fluent 风格** | 参考 Win10/11 Fluent Design System：扁平层次、微妙阴影、清晰边框 |
 
 ### 1.2 禁止的风格方向
 
@@ -38,43 +40,47 @@
 
 :root {
   /* ── 主题色（由用户配置 seedColor 动态注入） ──────────────── */
-  --color-primary:       #06b6d4;   /* 品牌蓝（默认） */
-  --color-primary-hover: #0891b2;
-  --color-primary-muted: rgba(6, 182, 212, 0.12);
+  --color-primary:       #60cdff;   /* 深色默认：天蓝 */
+  --color-primary-hover: #85d8ff;
+  --color-primary-muted: rgba(96, 205, 255, 0.12);
 
   /* ── 语义状态色（固定，不跟随主题色变化） ─────────────────── */
-  --color-success:       #22c55e;
-  --color-success-muted: rgba(34, 197, 94, 0.10);
-  --color-warning:       #f59e0b;
-  --color-warning-muted: rgba(245, 158, 11, 0.10);
-  --color-danger:        #ef4444;
-  --color-danger-muted:  rgba(239, 68, 68, 0.10);
-  --color-info:          #3b82f6;
-  --color-info-muted:    rgba(59, 130, 246, 0.10);
+  --color-success:       #6ccb5f;
+  --color-success-muted: rgba(108, 203, 95, 0.10);
+  --color-warning:       #f0c45a;
+  --color-warning-muted: rgba(240, 196, 90, 0.10);
+  --color-danger:        #f0656c;
+  --color-danger-muted:  rgba(240, 101, 108, 0.10);
+  --color-info:          #60a5fa;
+  --color-info-muted:    rgba(96, 165, 250, 0.10);
 
-  /* ── 背景层（深色模式，仅定义深色；浅色覆盖见下方） ──────── */
-  --bg-app:      #0f172a;   /* 最底层：应用背景 */
-  --bg-surface:  #1e293b;   /* 卡片/面板 */
-  --bg-elevated: #273348;   /* 悬浮层/下拉/Tooltip */
-  --bg-input:    #1a2540;   /* 输入框背景 */
+  /* ── 背景层（Win11 中性灰深色模式） ────────────────────────── */
+  --bg-app:      #1e1e1e;   /* 最底层：应用背景 */
+  --bg-surface:  #2b2b2b;   /* 卡片/面板 */
+  --bg-elevated: #333333;   /* 悬浮层/下拉/Tooltip */
+  --bg-input:    #252525;   /* 输入框背景 */
   --bg-hover:    rgba(255, 255, 255, 0.04);
   --bg-active:   rgba(255, 255, 255, 0.07);
 
   /* ── 文字 ──────────────────────────────────────────────────── */
-  --text-primary:   #f1f5f9;   /* 主要文字 */
-  --text-secondary: #94a3b8;   /* 辅助文字、描述 */
-  --text-tertiary:  #475569;   /* 占位符、禁用 */
-  --text-on-primary: #ffffff;  /* 主题色按钮上的文字 */
+  --text-primary:   #e8e8e8;   /* 主要文字 */
+  --text-secondary: #a0a0a0;   /* 辅助文字、描述 */
+  --text-tertiary:  #6e6e6e;   /* 占位符、禁用 */
+  --text-on-primary: #1e1e1e;  /* 主题色按钮上的文字 */
 
   /* ── 边框 ──────────────────────────────────────────────────── */
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong:  rgba(255, 255, 255, 0.14);
+  --border-default: rgba(255, 255, 255, 0.07);
+  --border-strong:  rgba(255, 255, 255, 0.12);
   --border-focus:   var(--color-primary);
 
+  /* ── 阴影层级（Win11 Fluent 风格） ─────────────────────────── */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.32);
+
   /* ── Dock 导航栏 ──────────────────────────────────────────── */
-  --dock-bg:          #1e293b;
-  --dock-border:      rgba(255, 255, 255, 0.10);
-  --dock-shadow:      0 -2px 20px rgba(0, 0, 0, 0.28);
+  --dock-bg:          #2b2b2b;
+  --dock-border:      rgba(255, 255, 255, 0.08);
+  --dock-shadow:      0 2px 12px rgba(0, 0, 0, 0.40);
   --dock-height:      56px;
   --dock-item-size:   52px;
   --dock-gap:         var(--space-1);
@@ -83,21 +89,31 @@
 
 /* ── 浅色模式覆盖 ────────────────────────────────────────────── */
 [data-theme="light"] {
-  --bg-app:      #f8fafc;
+  --color-primary:       #0078d4;   /* Fluent 蓝 */
+  --color-primary-hover: #106ebe;
+  --color-primary-muted: rgba(0, 120, 212, 0.10);
+
+  --bg-app:      #f3f3f3;
   --bg-surface:  #ffffff;
-  --bg-elevated: #f1f5f9;
-  --bg-input:    #f8fafc;
+  --bg-elevated: #f9f9f9;
+  --bg-input:    #ffffff;
   --bg-hover:    rgba(0, 0, 0, 0.03);
   --bg-active:   rgba(0, 0, 0, 0.06);
 
-  --text-primary:   #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary:  #94a3b8;
+  --text-primary:   #1a1a1a;
+  --text-secondary: #5c5c5c;
+  --text-tertiary:  #999999;
+  --text-on-primary: #ffffff;
 
   --border-default: rgba(0, 0, 0, 0.07);
-  --border-strong:  rgba(0, 0, 0, 0.12);
+  --border-strong:  rgba(0, 0, 0, 0.14);
 
-  --sidebar-bg: #f1f5f9;
+  --dock-bg:     #ffffff;
+  --dock-border: rgba(0, 0, 0, 0.08);
+  --dock-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.10);
 }
 ```
 
@@ -122,11 +138,14 @@
 ```css
 :root {
   --radius-sm:   4px;    /* 输入框、小元素 */
-  --radius-md:   8px;    /* 卡片、面板 */
-  --radius-lg:   12px;   /* 模态框（最大值） */
+  --radius-md:   6px;    /* 行内块元素 */
+  --radius-lg:   8px;    /* 卡片、面板 */
+  --radius-xl:   12px;   /* 模态框（最大值） */
   --radius-full: 999px;  /* 徽标、药丸形标签 */
 }
 ```
+
+> 注：Win11 风格偏向硬朗边角，因此将默认卡片圆角从 8px 收紧为 6px，面板圆角从 12px 收紧为 8px。新增 `--radius-xl: 12px` 仅用于模态框等最大圆角场景。
 
 ### 2.4 字体系统
 
@@ -453,6 +472,61 @@ const toggle = () => { if (!props.disabled) emit('update:modelValue', !props.mod
 
 ---
 
+### 4.6 图标（NIcon）
+
+不使用外部图标库，采用内联 SVG 组件 `NIcon.vue`。支持以下图标名：
+
+| 图标名 | 用途 | 位置 |
+|--------|------|------|
+| `house` | 仪表盘 | Dock 导航 |
+| `gear` | 设置 | Dock 导航 |
+| `shield` | 隐私 | Dock 导航 |
+| `terminal` | 日志 | Dock 导航 |
+| `info` | 关于 | Dock 导航 |
+| `sun` | 浅色模式 | TopBar 主题切换 |
+| `moon` | 深色模式 | TopBar 主题切换 |
+
+```vue
+<!-- 使用示例 -->
+<NIcon name="house" :size="20" />
+```
+
+所有图标均为 24×24 viewBox，`stroke-width="2"`，颜色继承 `currentColor`。
+
+### 4.7 主题切换按钮（TopBar）
+
+TopBar 右侧内置主题切换按钮，点击在深色/浅色之间即时切换。图标按当前主题状态显示：
+- 深色模式 → 太阳图标（暗示可切换到浅色）
+- 浅色模式 → 月亮图标（暗示可切换到深色）
+
+```css
+.top-bar__theme-btn {
+  width:        28px;
+  height:       28px;
+  border:       none;
+  border-radius: var(--radius-sm);
+  background:   transparent;
+  color:        var(--text-tertiary);
+}
+
+.top-bar__theme-btn:hover {
+  background: var(--bg-hover);
+  color:      var(--text-primary);
+}
+```
+
+### 4.8 外观设置区（Settings 页新增）
+
+Settings 页新增「外观」设置区块，集中管理：
+- **主题模式**：深色 / 浅色 / 跟随系统（通过 `themeMode` 配置项）
+- **主题色**：`<input type="color">` 取色器 + 文本输入框（对应 `seedColor`）
+- **界面缩放**：数值输入（80%–200%，步长 5%，对应 `uiScale`）
+- **界面字体**：文本输入（对应 `uiFont`，默认 Segoe UI）
+
+所有外观变更通过 `useTheme().applyTheme()` 即时生效，无需刷新页面。
+
+---
+
 ## 五、Dock 导航栏规范
 
 ### 5.1 外观与定位
@@ -513,12 +587,6 @@ Dock 是一条**固定在内容区底部中央**的浮动胶囊形导航栏：
   color:      var(--color-primary);
 }
 
-/* 图标 */
-.dock-item .ph {
-  font-size:   20px;
-  line-height: 1;
-}
-
 /* 文字标签 */
 .dock-item__label {
   font-size:   var(--text-xs);   /* 11px */
@@ -533,16 +601,17 @@ Dock 是一条**固定在内容区底部中央**的浮动胶囊形导航栏：
 <!-- src/components/layout/Dock.vue -->
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
+import NIcon from '@/components/base/NIcon.vue'
 
 const router = useRouter()
 const route  = useRoute()
 
 const navItems = [
-  { name: 'dashboard', icon: 'ph-house',        label: '仪表盘' },
-  { name: 'settings',  icon: 'ph-gear',          label: '设置'   },
-  { name: 'privacy',   icon: 'ph-shield',        label: '隐私'   },
-  { name: 'console',   icon: 'ph-terminal',      label: '日志'   },
-  { name: 'about',     icon: 'ph-info',          label: '关于'   },
+  { name: 'dashboard', icon: 'house',    label: '仪表盘' },
+  { name: 'settings',  icon: 'gear',     label: '设置'   },
+  { name: 'privacy',   icon: 'shield',   label: '隐私'   },
+  { name: 'console',   icon: 'terminal', label: '日志'   },
+  { name: 'about',     icon: 'info',     label: '关于'   },
 ]
 </script>
 
@@ -557,7 +626,7 @@ const navItems = [
       :aria-current="route.name === item.name ? 'page' : undefined"
       @click="router.push({ name: item.name })"
     >
-      <i :class="['ph', item.icon]" />
+      <NIcon :name="item.icon" :size="20" />
       <span class="dock-item__label">{{ item.label }}</span>
     </button>
   </nav>
@@ -766,3 +835,27 @@ export function adjustColor(hex: string, amount: number): string {
 ❌ 组件内重复定义已在 tokens.css 中声明的 CSS 变量
 ❌ 在 <style scoped> 中覆盖全局 Token（会造成主题失效）
 ```
+
+## 2026-05-10 Win11 风格重构
+
+- [x] 已完成：设计 Token 全面改为 Win10/11 Fluent 中性灰色调（深色 #1e1e1e / 浅色 #f3f3f3）
+- [x] 已完成：移除 AppShell 和 Settings 页的所有渐变背景，改为纯色平面布局
+- [x] 已完成：新增 `NIcon.vue` 内联 SVG 图标组件（house / gear / shield / terminal / info / sun / moon），替代 Phosphor Icons 外部依赖
+- [x] 已完成：Dock 导航栏图标从文字 emoji 替换为 NIcon SVG 矢量图标
+- [x] 已完成：TopBar 新增深色/浅色即时切换按钮
+- [x] 已完成：Settings 页新增「外观」区块（主题模式 / 主题色 / 界面缩放 / 字体），替代原 hero 渐变卡片
+- [x] 已完成：圆角系统收紧（md: 6px, lg: 8px）适配 Win11 硬朗风格，新增 --radius-xl: 12px
+- [x] 已完成：新增 --elevation-1 / --elevation-2 阴影层级变量
+- [x] 已完成：NSwitch 放大至 40×22px，滑块 16px 带微阴影
+- [x] 已完成：NBadge 新增语义色小圆点指示器
+- [x] 已完成：NInput/NSelect 高度收窄至 34px，hover 边框浮现，focus 带色环
+- [x] 已完成：NButton 主按钮 hover/active 使用 filter: brightness() 反馈
+- [x] 已完成：所有页面（Dashboard / Settings / Privacy / Console / About）卡片样式统一更新
+
+## 2026-05-10 五大页面 UI 优化
+
+- [x] 已完成：Dashboard — Hero 服务状态栏（状态指示点动画 + 相对时间 + 4 项快速统计）、双栏布局（快捷开关 + 系统指标）、截图中心（预览 + 元信息合并卡片）
+- [x] 已完成：Settings — 水平分段导航栏（5 个锚点 pill 按钮 + 平滑滚动）、移除所有渐变卡片、外观区块（主题色取色器 + 缩放 + 字体）
+- [x] 已完成：Privacy — Hero 描述横幅、窗口列表搜索过滤、已排除窗口视觉弱化、可视化选择器搜索 + 已排除标记
+- [x] 已完成：Console — 日志级别筛选工具栏、自动滚动开关、日志计数 + 清空按钮、自适应填满页面高度
+- [x] 已完成：About — 品牌 Hero（图标 + 版本 + 描述）、应用/系统信息双栏 KV 卡片、更新状态区 + 快捷导航入口

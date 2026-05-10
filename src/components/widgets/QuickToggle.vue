@@ -30,15 +30,25 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.quick-toggle:hover {
+  border-color: var(--border-strong);
 }
 
 .quick-toggle__info {
   display: grid;
   gap: var(--space-1);
+}
+
+.quick-toggle__info strong {
+  font-weight: var(--fw-medium);
+  font-size: var(--text-base);
 }
 
 .quick-toggle__info span {

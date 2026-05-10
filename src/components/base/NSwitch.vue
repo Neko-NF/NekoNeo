@@ -35,23 +35,25 @@ function toggle() {
 <style scoped>
 .n-switch {
   position: relative;
-  width: 36px;
-  height: 20px;
+  width: var(--switch-w);
+  height: var(--switch-h);
   border-radius: var(--radius-full);
   background: var(--border-strong);
   cursor: pointer;
+  flex-shrink: 0;
   transition: background var(--duration-fast) var(--ease-standard);
 }
 
 .n-switch::after {
   content: '';
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 14px;
-  height: 14px;
+  top: calc((var(--switch-h) - var(--switch-knob)) / 2);
+  left: calc((var(--switch-h) - var(--switch-knob)) / 2);
+  width: var(--switch-knob);
+  height: var(--switch-knob);
   border-radius: var(--radius-full);
-  background: var(--text-on-primary);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   transition: transform var(--duration-fast) var(--ease-standard);
 }
 
@@ -60,11 +62,11 @@ function toggle() {
 }
 
 .n-switch--on::after {
-  transform: translateX(16px);
+  transform: translateX(calc(var(--switch-w) - var(--switch-h)));
 }
 
 .n-switch--disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 </style>

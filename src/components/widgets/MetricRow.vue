@@ -13,7 +13,14 @@ defineProps<Props>();
     <span class="metric-row__label">{{ label }}</span>
     <span class="metric-row__value">{{ value }}</span>
     <div v-if="typeof percent === 'number'" class="metric-row__bar">
-      <div class="metric-row__bar-fill" :style="{ width: `${Math.max(0, Math.min(100, percent))}%` }" />
+      <div
+        class="metric-row__bar-fill"
+        :class="{
+          'metric-row__bar-fill--warn': percent >= 70 && percent < 90,
+          'metric-row__bar-fill--danger': percent >= 90,
+        }"
+        :style="{ width: `${Math.max(0, Math.min(100, percent))}%` }"
+      />
     </div>
   </div>
 </template>
@@ -22,6 +29,7 @@ defineProps<Props>();
 .metric-row {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) 0;
 }
@@ -29,6 +37,7 @@ defineProps<Props>();
 .metric-row__label {
   color: var(--text-secondary);
   font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
 }
 
 .metric-row__value {
@@ -51,5 +60,13 @@ defineProps<Props>();
   border-radius: var(--radius-full);
   background: var(--color-primary);
   transition: width var(--duration-slow) var(--ease-standard);
+}
+
+.metric-row__bar-fill--warn {
+  background: var(--color-warning);
+}
+
+.metric-row__bar-fill--danger {
+  background: var(--color-danger);
 }
 </style>

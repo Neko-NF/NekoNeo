@@ -2,6 +2,24 @@
   "$schema": "https://schema.tauri.app/capability/2",
   "identifier": "default",
   "description": "Default capability for NekoNeo",
-  "windows": ["main"],
-  "permissions": ["core:default"]
+  "windows": ["main", "privacy-picker"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-create",
+    "core:window:allow-close",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-center",
+    "core:window:allow-set-size",
+    "core:window:allow-set-skip-taskbar",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-resizable",
+    "core:window:allow-set-decorations",
+    "core:window:allow-set-visible-on-all-workspaces",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
+    "core:event:allow-emit-to"
+  ]
 }
