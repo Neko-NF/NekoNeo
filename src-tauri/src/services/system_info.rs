@@ -5,9 +5,11 @@ use std::{
 
 use sysinfo::{Networks, System};
 use tokio::sync::Mutex;
+use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 use windows::{
     Win32::{
         Foundation::{HWND, LPARAM, TRUE},
+        System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS},
         UI::WindowsAndMessaging::{
             EnumWindows, GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW,
             GetWindowThreadProcessId, IsWindowVisible,
@@ -38,11 +40,7 @@ impl SystemInfo {
     }
 
     pub fn get_fonts() -> Vec<String> {
-        vec![
-            "Segoe UI".into(),
-            "Microsoft YaHei UI".into(),
-            "JetBrains Mono".into(),
-        ]
+        collect_fonts()
     }
 
     pub fn list_visible_windows() -> Vec<WindowInfo> {
@@ -157,13 +155,15 @@ impl SystemSampler {
             })
             .unwrap_or_else(|| "unknown-process".into());
 
+        let power = read_power_status();
+
         TickResult {
             success: true,
             timestamp: super::status_reporter::now_iso_like(),
             app_name,
-            battery_level: 0,
-            is_charging: false,
-            has_battery: false,
+            battery_level: power.battery_level,
+            is_charging: power.is_charging,
+            has_battery: power.has_battery,
             user_status: if metrics.cpu_pct < 8.0 && tick_count % 2 == 0 {
                 "away".into()
             } else {
@@ -191,6 +191,46 @@ fn matches_privacy_rule(window: &WindowInfo, rules: &[String]) -> bool {
 
 pub fn build_privacy_rule_key(process_name: &str, title: &str) -> String {
     format!("{}::{}", process_name.trim(), title.trim())
+}
+
+fn collect_fonts() -> Vec<String> {
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let fonts_key =
+        match hklm.open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts") {
+            Ok(value) => value,
+            Err(_) => return default_fonts(),
+        };
+
+    let mut fonts = fonts_key
+        .enum_values()
+        .filter_map(Result::ok)
+        .map(|(name, _)| strip_font_suffix(&name))
+        .filter(|name| !name.is_empty())
+        .collect::<Vec<_>>();
+
+    fonts.sort();
+    fonts.dedup();
+
+    if fonts.is_empty() {
+        default_fonts()
+    } else {
+        fonts
+    }
+}
+
+fn default_fonts() -> Vec<String> {
+    vec![
+        "Segoe UI".into(),
+        "Microsoft YaHei UI".into(),
+        "JetBrains Mono".into(),
+    ]
+}
+
+fn strip_font_suffix(name: &str) -> String {
+    name.replace(" (TrueType)", "")
+        .replace(" (OpenType)", "")
+        .trim()
+        .to_string()
 }
 
 fn collect_visible_windows() -> Vec<WindowInfo> {
@@ -292,5 +332,62 @@ fn get_window_pid(hwnd: HWND) -> Option<u32> {
         None
     } else {
         Some(pid)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct PowerSnapshot {
+    battery_level: u8,
+    is_charging: bool,
+    has_battery: bool,
+}
+
+fn read_power_status() -> PowerSnapshot {
+    let mut status = SYSTEM_POWER_STATUS::default();
+    if unsafe { GetSystemPowerStatus(&mut status) }.is_err() {
+        return PowerSnapshot {
+            battery_level: 0,
+            is_charging: false,
+            has_battery: false,
+        };
+    }
+
+    let has_battery = status.BatteryFlag != 128 && status.BatteryFlag != 255;
+    let battery_level = if has_battery && status.BatteryLifePercent != 255 {
+        status.BatteryLifePercent
+    } else {
+        0
+    };
+    let is_charging = status.ACLineStatus == 1;
+
+    PowerSnapshot {
+        battery_level,
+        is_charging,
+        has_battery,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_privacy_rule_key() {
+        assert_eq!(
+            build_privacy_rule_key("Code.exe", "Visual Studio Code"),
+            "Code.exe::Visual Studio Code"
+        );
+    }
+
+    #[test]
+    fn test_strip_font_suffix() {
+        assert_eq!(strip_font_suffix("Segoe UI (TrueType)"), "Segoe UI");
+        assert_eq!(strip_font_suffix("Cascadia Code"), "Cascadia Code");
+    }
+
+    #[test]
+    fn test_power_status_no_panic() {
+        let snapshot = read_power_status();
+        assert!(snapshot.battery_level <= 100);
     }
 }
