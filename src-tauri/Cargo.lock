@@ -1799,6 +1799,8 @@ dependencies = [
  "tauri-build",
  "thiserror 1.0.69",
  "tokio",
+ "windows",
+ "windows-core 0.61.2",
 ]
 
 [[package]]

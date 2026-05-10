@@ -5,6 +5,15 @@ use std::{
 
 use sysinfo::{Networks, System};
 use tokio::sync::Mutex;
+use windows::{
+    Win32::{
+        Foundation::{HWND, LPARAM, TRUE},
+        UI::WindowsAndMessaging::{
+            EnumWindows, GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW,
+            GetWindowThreadProcessId, IsWindowVisible,
+        },
+    },
+};
 
 use crate::models::{
     service::TickResult,
@@ -36,20 +45,7 @@ impl SystemInfo {
     }
 
     pub fn list_visible_windows() -> Vec<WindowInfo> {
-        vec![
-            WindowInfo {
-                title: "Visual Studio Code".into(),
-                process_name: "Code.exe".into(),
-                pid: 4242,
-                path: "C:/Program Files/Microsoft VS Code/Code.exe".into(),
-            },
-            WindowInfo {
-                title: "Google Chrome".into(),
-                process_name: "chrome.exe".into(),
-                pid: 5252,
-                path: "C:/Program Files/Google/Chrome/Application/chrome.exe".into(),
-            },
-        ]
+        collect_visible_windows()
     }
 }
 
@@ -131,20 +127,22 @@ impl SystemSampler {
 
     fn refresh_tick_result(&mut self, tick_count: u64) -> TickResult {
         let metrics = self.refresh_metrics();
+        let foreground_window = collect_foreground_window(&self.system);
+        let top_process = self.system.processes().values().max_by(|left, right| {
+            left.cpu_usage()
+                .partial_cmp(&right.cpu_usage())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
-        let top_process = self
-            .system
-            .processes()
-            .values()
-            .max_by(|left, right| {
-                left.cpu_usage()
-                    .partial_cmp(&right.cpu_usage())
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
-
-        let app_name = top_process
-            .map(|process| process.name().to_string_lossy().to_string())
+        let app_name = foreground_window
+            .as_ref()
+            .map(|window| window.process_name.clone())
             .filter(|name| !name.is_empty())
+            .or_else(|| {
+                top_process
+                    .map(|process| process.name().to_string_lossy().to_string())
+                    .filter(|name| !name.is_empty())
+            })
             .unwrap_or_else(|| "unknown-process".into());
 
         TickResult {
@@ -163,5 +161,107 @@ impl SystemSampler {
             screenshot_blurred: false,
             error: None,
         }
+    }
+}
+
+fn collect_visible_windows() -> Vec<WindowInfo> {
+    let mut system = System::new_all();
+    system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let mut handles = Vec::<isize>::new();
+
+    unsafe {
+        let _ = EnumWindows(
+            Some(enum_window_callback),
+            LPARAM((&mut handles as *mut Vec<isize>) as isize),
+        );
+    }
+
+    let mut windows = handles
+        .into_iter()
+        .filter_map(|raw| build_window_info(HWND(raw as *mut _), &system))
+        .collect::<Vec<_>>();
+
+    windows.sort_by(|left, right| left.title.to_lowercase().cmp(&right.title.to_lowercase()));
+    windows
+}
+
+fn collect_foreground_window(system: &System) -> Option<WindowInfo> {
+    let hwnd = unsafe { GetForegroundWindow() };
+    if hwnd.0.is_null() {
+        return None;
+    }
+
+    build_window_info(hwnd, system)
+}
+
+fn build_window_info(hwnd: HWND, system: &System) -> Option<WindowInfo> {
+    let title = get_window_title(hwnd)?;
+    let pid = get_window_pid(hwnd)?;
+    let process = system.process(sysinfo::Pid::from_u32(pid))?;
+    let process_name = process.name().to_string_lossy().to_string();
+    let path = process
+        .exe()
+        .map(|value| value.display().to_string())
+        .unwrap_or_default();
+
+    Some(WindowInfo {
+        title,
+        process_name,
+        pid,
+        path,
+    })
+}
+
+unsafe extern "system" fn enum_window_callback(
+    hwnd: HWND,
+    lparam: LPARAM,
+) -> windows_core::BOOL {
+    if !unsafe { IsWindowVisible(hwnd) }.as_bool() {
+        return TRUE;
+    }
+
+    if get_window_title(hwnd).is_none() {
+        return TRUE;
+    }
+
+    let handles = unsafe { &mut *(lparam.0 as *mut Vec<isize>) };
+    handles.push(hwnd.0 as isize);
+    TRUE
+}
+
+fn get_window_title(hwnd: HWND) -> Option<String> {
+    let len = unsafe { GetWindowTextLengthW(hwnd) };
+    if len <= 0 {
+        return None;
+    }
+
+    let mut buffer = vec![0u16; len as usize + 1];
+    let written = unsafe { GetWindowTextW(hwnd, &mut buffer) };
+    if written <= 0 {
+        return None;
+    }
+
+    let title = String::from_utf16_lossy(&buffer[..written as usize])
+        .trim()
+        .to_string();
+
+    if title.is_empty() {
+        None
+    } else {
+        Some(title)
+    }
+}
+
+fn get_window_pid(hwnd: HWND) -> Option<u32> {
+    let mut pid = 0u32;
+    unsafe {
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+    }
+
+    if pid == 0 {
+        None
+    } else {
+        Some(pid)
     }
 }
