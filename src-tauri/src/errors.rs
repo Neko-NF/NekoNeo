@@ -6,6 +6,8 @@ use thiserror::Error;
 pub enum AppError {
     #[error("配置读取失败: {0}")]
     ConfigError(String),
+    #[error("网络请求失败: {0}")]
+    NetworkError(String),
     #[error("服务操作失败: {0}")]
     ServiceError(String),
     #[error("系统调用失败: {0}")]

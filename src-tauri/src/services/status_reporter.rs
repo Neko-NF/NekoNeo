@@ -11,7 +11,7 @@ use tokio::{
 
 use crate::models::service::{ServiceStatus, TickResult};
 use crate::models::config::AppConfig;
-use crate::services::system_info::SystemInfo;
+use crate::services::{api_client::ApiClient, system_info::SystemInfo};
 
 #[derive(Clone)]
 pub struct StatusReporter {
@@ -27,6 +27,7 @@ struct ReporterInner {
     tick_count: u64,
     cancel_tx: Option<oneshot::Sender<()>>,
     config: Option<Arc<Mutex<AppConfig>>>,
+    api_client: Option<Arc<Mutex<ApiClient>>>,
 }
 
 impl StatusReporter {
@@ -41,11 +42,17 @@ impl StatusReporter {
                 tick_count: 0,
                 cancel_tx: None,
                 config: None,
+                api_client: None,
             })),
         }
     }
 
-    pub async fn start(&self, app: AppHandle, config: Arc<Mutex<AppConfig>>) -> ServiceStatus {
+    pub async fn start(
+        &self,
+        app: AppHandle,
+        config: Arc<Mutex<AppConfig>>,
+        api_client: Arc<Mutex<ApiClient>>,
+    ) -> ServiceStatus {
         let mut inner = self.inner.lock().await;
         if inner.running {
             return self.status_from_inner(&inner);
@@ -55,6 +62,7 @@ impl StatusReporter {
         inner.started_at = Some(Instant::now());
         inner.tick_count = 0;
         inner.config = Some(config);
+        inner.api_client = Some(api_client);
 
         let (cancel_tx, cancel_rx) = oneshot::channel();
         inner.cancel_tx = Some(cancel_tx);
@@ -128,6 +136,7 @@ impl StatusReporter {
         inner.tick_count += 1;
         let tick_count = inner.tick_count;
         let config = inner.config.clone();
+        let api_client = inner.api_client.clone();
         drop(inner);
 
         let config_snapshot = match config {
@@ -139,6 +148,14 @@ impl StatusReporter {
         let metrics = SystemInfo::get_metrics().await;
 
         let _ = app.emit("metrics:update", &metrics);
+
+        if let Some(api_client) = api_client {
+            let client = api_client.lock().await.clone();
+            match client.report_status_v2(&result).await {
+                Ok(_) => self.emit_log(app, "success", "状态已上报到服务端"),
+                Err(error) => self.emit_log(app, "error", &format!("状态上报失败: {error}")),
+            }
+        }
 
         let mut inner = self.inner.lock().await;
         inner.last_result = Some(result.clone());

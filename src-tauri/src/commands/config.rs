@@ -38,5 +38,8 @@ pub async fn config_set(
 
     ConfigStore::save(&config).map_err(|error| AppError::ConfigError(error.to_string()))?;
 
+    let mut api_client = state.api_client.lock().await;
+    api_client.reconfigure(config.active_server_url(), config.device_key.clone());
+
     Ok(())
 }
