@@ -10,6 +10,7 @@ use tokio::{
 };
 
 use crate::models::service::{ServiceStatus, TickResult};
+use crate::services::system_info::SystemInfo;
 
 #[derive(Clone)]
 pub struct StatusReporter {
@@ -110,7 +111,7 @@ impl StatusReporter {
                     break;
                 }
                 _ = sleep(Duration::from_secs(5)) => {
-                    let tick = self.generate_tick().await;
+                    let tick = self.generate_tick(&app).await;
                     let _ = app.emit("service:tick", &tick);
                     self.emit_log(&app, "info", &format!("完成第 {} 次状态上报", self.current_tick_count().await));
                 }
@@ -118,32 +119,18 @@ impl StatusReporter {
         }
     }
 
-    async fn generate_tick(&self) -> TickResult {
+    async fn generate_tick(&self, app: &AppHandle) -> TickResult {
         let mut inner = self.inner.lock().await;
         inner.tick_count += 1;
         let tick_count = inner.tick_count;
+        drop(inner);
 
-        let result = TickResult {
-            success: true,
-            timestamp: now_iso_like(),
-            app_name: if tick_count % 2 == 0 {
-                "Code.exe".into()
-            } else {
-                "chrome.exe".into()
-            },
-            battery_level: 80 + (tick_count % 15) as u8,
-            is_charging: tick_count % 3 != 0,
-            has_battery: true,
-            user_status: if tick_count % 4 == 0 {
-                "away".into()
-            } else {
-                "online".into()
-            },
-            has_screenshot: true,
-            screenshot_blurred: tick_count % 5 == 0,
-            error: None,
-        };
+        let result = SystemInfo::create_tick_result(tick_count).await;
+        let metrics = SystemInfo::get_metrics().await;
 
+        let _ = app.emit("metrics:update", &metrics);
+
+        let mut inner = self.inner.lock().await;
         inner.last_result = Some(result.clone());
         result
     }
@@ -169,7 +156,7 @@ impl StatusReporter {
     }
 }
 
-fn now_iso_like() -> String {
+pub(crate) fn now_iso_like() -> String {
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|value| value.as_secs())
