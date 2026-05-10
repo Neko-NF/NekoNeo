@@ -299,7 +299,7 @@ async function doGenerateDeviceKey() {
   generatingKey.value = true;
   try {
     const result = await authStore.generateDeviceKey(
-      `NekoNeo-${draft.hostname || 'Desktop'}`,
+      `NekoNeo-Desktop`,
     );
     draft.deviceKey = result.deviceKey;
     await persist('deviceKey');
@@ -835,7 +835,7 @@ onMounted(() => {
           <p>{{ updateInfo.version }} · {{ updateInfo.channel }} · {{ updateInfo.assetName || '暂无桌面包' }}</p>
           <p class="infobox__detail">{{ updateInfo.releaseNotes }}</p>
           <div v-if="!updateInfo.downloaded" class="infobox__actions">
-            <NButton variant="ghost" size="sm" :disabled="saving" @click="skipVersion()">
+            <NButton variant="ghost" size="sm" :disabled="!!savingKey" @click="skipVersion()">
               跳过此版本
             </NButton>
           </div>
