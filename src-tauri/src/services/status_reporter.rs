@@ -3,7 +3,11 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-use tokio::sync::Mutex;
+use tauri::{AppHandle, Emitter};
+use tokio::{
+    sync::{oneshot, Mutex},
+    time::{sleep, Duration},
+};
 
 use crate::models::service::{ServiceStatus, TickResult};
 
@@ -18,6 +22,8 @@ struct ReporterInner {
     consecutive_failures: u32,
     auto_restart_count: u32,
     last_result: Option<TickResult>,
+    tick_count: u64,
+    cancel_tx: Option<oneshot::Sender<()>>,
 }
 
 impl StatusReporter {
@@ -29,33 +35,53 @@ impl StatusReporter {
                 consecutive_failures: 0,
                 auto_restart_count: 0,
                 last_result: None,
+                tick_count: 0,
+                cancel_tx: None,
             })),
         }
     }
 
-    pub async fn start(&self) -> ServiceStatus {
+    pub async fn start(&self, app: AppHandle) -> ServiceStatus {
         let mut inner = self.inner.lock().await;
+        if inner.running {
+            return self.status_from_inner(&inner);
+        }
+
         inner.running = true;
         inner.started_at = Some(Instant::now());
-        inner.last_result = Some(TickResult {
-            success: true,
-            timestamp: now_iso_like(),
-            app_name: "bootstrap".into(),
-            battery_level: 85,
-            is_charging: true,
-            has_battery: true,
-            user_status: "online".into(),
-            has_screenshot: true,
-            screenshot_blurred: false,
-            error: None,
+        inner.tick_count = 0;
+
+        let (cancel_tx, cancel_rx) = oneshot::channel();
+        inner.cancel_tx = Some(cancel_tx);
+
+        let status = self.status_from_inner(&inner);
+        drop(inner);
+
+        self.emit_status(&app, &status);
+        self.emit_log(&app, "success", "上报服务已启动");
+
+        let reporter = self.clone();
+        tokio::spawn(async move {
+            reporter.run_loop(app, cancel_rx).await;
         });
-        self.status_from_inner(&inner)
+
+        status
     }
 
-    pub async fn stop(&self) -> ServiceStatus {
+    pub async fn stop(&self, app: &AppHandle) -> ServiceStatus {
         let mut inner = self.inner.lock().await;
         inner.running = false;
-        self.status_from_inner(&inner)
+        if let Some(cancel_tx) = inner.cancel_tx.take() {
+            let _ = cancel_tx.send(());
+        }
+
+        let status = self.status_from_inner(&inner);
+        drop(inner);
+
+        self.emit_status(app, &status);
+        self.emit_log(app, "warn", "上报服务已停止");
+
+        status
     }
 
     pub async fn status(&self) -> ServiceStatus {
@@ -75,6 +101,71 @@ impl StatusReporter {
             consecutive_failures: inner.consecutive_failures,
             auto_restart_count: inner.auto_restart_count,
         }
+    }
+
+    async fn run_loop(&self, app: AppHandle, mut cancel_rx: oneshot::Receiver<()>) {
+        loop {
+            tokio::select! {
+                _ = &mut cancel_rx => {
+                    break;
+                }
+                _ = sleep(Duration::from_secs(5)) => {
+                    let tick = self.generate_tick().await;
+                    let _ = app.emit("service:tick", &tick);
+                    self.emit_log(&app, "info", &format!("完成第 {} 次状态上报", self.current_tick_count().await));
+                }
+            }
+        }
+    }
+
+    async fn generate_tick(&self) -> TickResult {
+        let mut inner = self.inner.lock().await;
+        inner.tick_count += 1;
+        let tick_count = inner.tick_count;
+
+        let result = TickResult {
+            success: true,
+            timestamp: now_iso_like(),
+            app_name: if tick_count % 2 == 0 {
+                "Code.exe".into()
+            } else {
+                "chrome.exe".into()
+            },
+            battery_level: 80 + (tick_count % 15) as u8,
+            is_charging: tick_count % 3 != 0,
+            has_battery: true,
+            user_status: if tick_count % 4 == 0 {
+                "away".into()
+            } else {
+                "online".into()
+            },
+            has_screenshot: true,
+            screenshot_blurred: tick_count % 5 == 0,
+            error: None,
+        };
+
+        inner.last_result = Some(result.clone());
+        result
+    }
+
+    async fn current_tick_count(&self) -> u64 {
+        let inner = self.inner.lock().await;
+        inner.tick_count
+    }
+
+    fn emit_status(&self, app: &AppHandle, status: &ServiceStatus) {
+        let _ = app.emit("service:status", status);
+    }
+
+    fn emit_log(&self, app: &AppHandle, level: &str, message: &str) {
+        let _ = app.emit(
+            "service:log",
+            serde_json::json!({
+                "level": level,
+                "message": message,
+                "time": now_iso_like(),
+            }),
+        );
     }
 }
 

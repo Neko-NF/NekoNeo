@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
+import { listen } from '@tauri-apps/api/event';
 import { commands, getErrorMessage } from '@/api/commands';
 import type { LogEntry, ServiceStatus, TickResult } from '@/types';
 
@@ -12,6 +13,9 @@ export const useServiceStore = defineStore('service', () => {
   const error = ref<string | null>(null);
   const initialized = ref(false);
   let timer: ReturnType<typeof setInterval> | null = null;
+  let serviceTickUnlisten: (() => void) | null = null;
+  let serviceStatusUnlisten: (() => void) | null = null;
+  let serviceLogUnlisten: (() => void) | null = null;
 
   const statusText = computed(() => (running.value ? '运行中' : '已停止'));
 
@@ -40,6 +44,19 @@ export const useServiceStore = defineStore('service', () => {
 
     initialized.value = true;
     await refresh();
+    serviceTickUnlisten = await listen<TickResult>('service:tick', (event) => {
+      lastResult.value = event.payload;
+    });
+    serviceStatusUnlisten = await listen<ServiceStatus>('service:status', (event) => {
+      status.value = event.payload;
+      running.value = event.payload.running;
+    });
+    serviceLogUnlisten = await listen<LogEntry>('service:log', (event) => {
+      logs.value.unshift(event.payload);
+      if (logs.value.length > 200) {
+        logs.value.length = 200;
+      }
+    });
     appendLog('info', '服务状态轮询已启动');
     timer = window.setInterval(() => {
       void refresh();

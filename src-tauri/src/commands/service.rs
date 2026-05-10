@@ -1,15 +1,21 @@
-use tauri::State;
+use tauri::{AppHandle, State};
 
 use crate::{app_state::AppState, errors::AppError, models::service::{ServiceStatus, TickResult}};
 
 #[tauri::command]
-pub async fn service_start(state: State<'_, AppState>) -> Result<ServiceStatus, AppError> {
-    Ok(state.reporter.start().await)
+pub async fn service_start(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<ServiceStatus, AppError> {
+    Ok(state.reporter.start(app).await)
 }
 
 #[tauri::command]
-pub async fn service_stop(state: State<'_, AppState>) -> Result<ServiceStatus, AppError> {
-    Ok(state.reporter.stop().await)
+pub async fn service_stop(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<ServiceStatus, AppError> {
+    Ok(state.reporter.stop(&app).await)
 }
 
 #[tauri::command]
