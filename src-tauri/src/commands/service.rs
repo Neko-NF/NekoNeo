@@ -7,7 +7,7 @@ pub async fn service_start(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<ServiceStatus, AppError> {
-    Ok(state.reporter.start(app).await)
+    Ok(state.reporter.start(app, state.config.clone()).await)
 }
 
 #[tauri::command]

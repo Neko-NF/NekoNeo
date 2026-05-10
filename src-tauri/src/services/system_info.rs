@@ -16,6 +16,7 @@ use windows::{
 };
 
 use crate::models::{
+    config::AppConfig,
     service::TickResult,
     system::{SystemMetrics, WindowInfo},
 };
@@ -31,9 +32,9 @@ impl SystemInfo {
         sampler.refresh_metrics()
     }
 
-    pub async fn create_tick_result(tick_count: u64) -> TickResult {
+    pub async fn create_tick_result(tick_count: u64, config: &AppConfig) -> TickResult {
         let mut sampler = SYSTEM_SAMPLER.lock().await;
-        sampler.refresh_tick_result(tick_count)
+        sampler.refresh_tick_result(tick_count, config)
     }
 
     pub fn get_fonts() -> Vec<String> {
@@ -125,7 +126,7 @@ impl SystemSampler {
         }
     }
 
-    fn refresh_tick_result(&mut self, tick_count: u64) -> TickResult {
+    fn refresh_tick_result(&mut self, tick_count: u64, config: &AppConfig) -> TickResult {
         let metrics = self.refresh_metrics();
         let foreground_window = collect_foreground_window(&self.system);
         let top_process = self.system.processes().values().max_by(|left, right| {
@@ -134,9 +135,20 @@ impl SystemSampler {
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
 
+        let privacy_hit = foreground_window
+            .as_ref()
+            .map(|window| matches_privacy_rule(window, &config.privacy_rules))
+            .unwrap_or(false);
+
         let app_name = foreground_window
             .as_ref()
-            .map(|window| window.process_name.clone())
+            .map(|window| {
+                if privacy_hit {
+                    "hidden-by-privacy-rule".to_string()
+                } else {
+                    window.process_name.clone()
+                }
+            })
             .filter(|name| !name.is_empty())
             .or_else(|| {
                 top_process
@@ -158,10 +170,27 @@ impl SystemSampler {
                 "online".into()
             },
             has_screenshot: false,
-            screenshot_blurred: false,
+            screenshot_blurred: privacy_hit || config.blur_all_screenshots,
             error: None,
         }
     }
+}
+
+fn matches_privacy_rule(window: &WindowInfo, rules: &[String]) -> bool {
+    let process_name = window.process_name.trim();
+    let title = window.title.trim();
+    let composite = build_privacy_rule_key(process_name, title);
+
+    rules.iter().any(|rule| {
+        let normalized = rule.trim();
+        normalized.eq_ignore_ascii_case(composite.as_str())
+            || normalized.eq_ignore_ascii_case(process_name)
+            || normalized.eq_ignore_ascii_case(title)
+    })
+}
+
+pub fn build_privacy_rule_key(process_name: &str, title: &str) -> String {
+    format!("{}::{}", process_name.trim(), title.trim())
 }
 
 fn collect_visible_windows() -> Vec<WindowInfo> {

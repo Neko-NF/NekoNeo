@@ -10,6 +10,7 @@ use tokio::{
 };
 
 use crate::models::service::{ServiceStatus, TickResult};
+use crate::models::config::AppConfig;
 use crate::services::system_info::SystemInfo;
 
 #[derive(Clone)]
@@ -25,6 +26,7 @@ struct ReporterInner {
     last_result: Option<TickResult>,
     tick_count: u64,
     cancel_tx: Option<oneshot::Sender<()>>,
+    config: Option<Arc<Mutex<AppConfig>>>,
 }
 
 impl StatusReporter {
@@ -38,11 +40,12 @@ impl StatusReporter {
                 last_result: None,
                 tick_count: 0,
                 cancel_tx: None,
+                config: None,
             })),
         }
     }
 
-    pub async fn start(&self, app: AppHandle) -> ServiceStatus {
+    pub async fn start(&self, app: AppHandle, config: Arc<Mutex<AppConfig>>) -> ServiceStatus {
         let mut inner = self.inner.lock().await;
         if inner.running {
             return self.status_from_inner(&inner);
@@ -51,6 +54,7 @@ impl StatusReporter {
         inner.running = true;
         inner.started_at = Some(Instant::now());
         inner.tick_count = 0;
+        inner.config = Some(config);
 
         let (cancel_tx, cancel_rx) = oneshot::channel();
         inner.cancel_tx = Some(cancel_tx);
@@ -123,9 +127,15 @@ impl StatusReporter {
         let mut inner = self.inner.lock().await;
         inner.tick_count += 1;
         let tick_count = inner.tick_count;
+        let config = inner.config.clone();
         drop(inner);
 
-        let result = SystemInfo::create_tick_result(tick_count).await;
+        let config_snapshot = match config {
+            Some(config) => config.lock().await.clone(),
+            None => AppConfig::default(),
+        };
+
+        let result = SystemInfo::create_tick_result(tick_count, &config_snapshot).await;
         let metrics = SystemInfo::get_metrics().await;
 
         let _ = app.emit("metrics:update", &metrics);
