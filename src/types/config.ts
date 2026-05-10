@@ -1,0 +1,40 @@
+export type ServerMode = 'production' | 'local';
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type CloseAction = 'ask' | 'minimize' | 'exit';
+export type IncognitoScope = 'screenshot' | 'title' | 'both';
+export type UpdateChannel = 'stable' | 'beta';
+
+export interface AppConfig {
+  deviceKey: string;
+  deviceId: number | null;
+  reportInterval: number;
+  serverMode: ServerMode;
+  serverUrlProd: string;
+  serverUrlLocal: string;
+  enableScreenshot: boolean;
+  screenshotInterval: number;
+  syncScreenshotInterval: boolean;
+  enableAutoStart: boolean;
+  minimizeOnAutoStart: boolean;
+  startupDelayMs: number;
+  enableAutoServiceStart: boolean;
+  closeAction: CloseAction;
+  themeMode: ThemeMode;
+  seedColor: string;
+  uiScale: number;
+  uiFont: string;
+  enableNotification: boolean;
+  doNotDisturb: boolean;
+  enableIncognito: boolean;
+  incognitoScope: IncognitoScope;
+  blurAllScreenshots: boolean;
+  privacyRules: string[];
+  enableAutoRestart: boolean;
+  maxRestarts: number;
+  restartIntervalSec: number;
+  watchdogTimeoutSec: number;
+  autoCheckUpdate: boolean;
+  updateChannel: UpdateChannel;
+  autoDownload: boolean;
+  skippedVersion: string;
+}
