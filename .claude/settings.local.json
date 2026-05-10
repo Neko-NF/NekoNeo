@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(cargo check *)",
+      "Bash(cargo test *)",
+      "Bash(pnpm type-check *)",
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)",
+      "Bash(npx tauri *)",
+      "Bash(npx kill-port *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(powershell *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:www.bilibili.com)",
+      "WebFetch(domain:maaend.com)",
+      "Bash(npx sharp-cli *)",
+      "Bash(node -e \"const s = require\\('sharp'\\); s\\('C:/Users/qwe/Pictures/icon1.jpg'\\).resize\\(256,256\\).png\\(\\).toFile\\('src-tauri/icons/icon.png'\\).then\\(\\(\\) => console.log\\('png done'\\)\\); s\\('C:/Users/qwe/Pictures/icon1.jpg'\\).resize\\(32,32\\).png\\(\\).toFile\\('src-tauri/icons/32x32.png'\\).then\\(\\(\\) => console.log\\('32 done'\\)\\); s\\('C:/Users/qwe/Pictures/icon1.jpg'\\).resize\\(128,128\\).png\\(\\).toFile\\('src-tauri/icons/128x128.png'\\).then\\(\\(\\) => console.log\\('128 done'\\)\\); s\\('C:/Users/qwe/Pictures/icon1.jpg'\\).resize\\(256,256\\).png\\(\\).toFile\\('src-tauri/icons/128x128@2x.png'\\).then\\(\\(\\) => console.log\\('2x done'\\)\\)\")",
+      "Bash(npx --yes sharp-cli -i \"C:/Users/qwe/Pictures/icon1.jpg\" -o src-tauri/icons/icon.png --width 256 --height 256)",
+      "Bash(node -e ' *)",
+      "Bash(cargo run *)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(echo \"nekoneo.key\")",
+      "Bash(echo \"nekoneo.key.pub\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(gh auth *)",
+      "Bash(gh workflow *)"
+    ]
+  }
+}
